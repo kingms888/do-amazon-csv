@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>Amazon 卖家 CSV 数据清洗工具 · 一键格式化库存/订单</title>
+    <meta name="description" content="专为 Amazon 卖家设计的免费 CSV 清洗工具，快速格式化库存、订单等混乱数据。支持列对齐、去空行、智能修剪。">
+    <meta name="keywords" content="amazon csv 清洗, amazon 卖家 csv 工具, amazon csv 格式化, amazon 数据清洗, amazon 库存 csv">
+    <meta name="author" content="Amazon Seller Tools (非官方)">
+    <meta property="og:title" content="Amazon 卖家 CSV 数据清洗工具">
+    <meta property="og:description" content="一键清洗 Amazon 库存/订单 CSV，去除多余空格、空行、统一分隔符。">
+    <meta property="og:type" content="website">
+    <meta name="robots" content="index, follow">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f4f7fb;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 1rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.12);
+            padding: 1.8rem 1.5rem 2.5rem;
+            margin: 1rem 0 2rem;
+        }
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.2rem;
+        }
+        h1 small {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #5b6f87;
+            background: #eef2f6;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            margin-left: 0.2rem;
+        }
+        .subhead {
+            color: #3b4e66;
+            margin-bottom: 1.8rem;
+            border-left: 4px solid #f59e0b;
+            padding-left: 1rem;
+            font-size: 1rem;
+            background: #fef9e7;
+            border-radius: 0 12px 12px 0;
+            padding: 0.6rem 1rem;
+        }
+        .tool-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+        }
+        .input-area {
+            background: #f9fcff;
+            border-radius: 20px;
+            padding: 1.2rem 1rem 1.5rem;
+            border: 1px solid #e2eaf1;
+        }
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+        .field-group {
+            flex: 2 1 260px;
+        }
+        .field-group label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #1f3a57;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 0.9rem 1rem;
+            font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+            font-size: 0.85rem;
+            background: white;
+            border: 1px solid #d0ddee;
+            border-radius: 16px;
+            resize: vertical;
+            transition: 0.15s;
+            line-height: 1.5;
+        }
+        textarea:focus {
+            border-color: #f59e0b;
+            outline: 2px solid #f59e0b40;
+            box-shadow: 0 0 0 4px #f59e0b20;
+        }
+        .action-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.8rem 1rem;
+            margin-top: 1rem;
+        }
+        .btn {
+            background: #1e3a5f;
+            border: none;
+            color: white;
+            font-weight: 500;
+            padding: 0.7rem 1.8rem;
+            border-radius: 60px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 4px 8px rgba(0,20,40,0.08);
+            border: 1px solid #ffffff20;
+        }
+        .btn:hover {
+            background: #14304e;
+            transform: scale(0.98);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        }
+        .btn-outline {
+            background: transparent;
+            color: #1e3a5f;
+            border: 1px solid #b8cde0;
+            box-shadow: none;
+        }
+        .btn-outline:hover {
+            background: #eef4fa;
+            border-color: #1e3a5f;
+        }
+        .btn-warning {
+            background: #f59e0b;
+            color: #1e293b;
+            border-color: #d48c08;
+        }
+        .btn-warning:hover {
+            background: #e09107;
+        }
+        .stats-badge {
+            font-size: 0.8rem;
+            background: #e9edf3;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            color: #1e3a5f;
+            white-space: nowrap;
+        }
+        .output-area {
+            background: #f9fcff;
+            border-radius: 20px;
+            padding: 1.2rem 1rem 1.5rem;
+            border: 1px solid #e2eaf1;
+        }
+        .output-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        .output-header h3 {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        .copy-btn {
+            background: transparent;
+            border: 1px solid #b8cde0;
+            border-radius: 60px;
+            padding: 0.3rem 1.2rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .copy-btn:hover {
+            background: #eef4fa;
+            border-color: #1e3a5f;
+        }
+        .output-display {
+            background: white;
+            border: 1px solid #d0ddee;
+            border-radius: 16px;
+            padding: 0.8rem 1rem;
+            min-height: 120px;
+            max-height: 350px;
+            overflow: auto;
+            font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.5;
+        }
+        .placeholder-ad {
+            background: #f2f6fc;
+            border-radius: 18px;
+            padding: 0.8rem 1.2rem;
+            margin: 1.5rem 0 0.8rem;
+            border: 1px dashed #b8cde0;
+            font-size: 0.85rem;
+            color: #2c4b6e;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .placeholder-ad span {
+            opacity: 0.7;
+        }
+        .affiliate-section {
+            background: #faf5eb;
+            border-radius: 18px;
+            padding: 1rem 1.2rem;
+            margin: 1rem 0 0.5rem;
+            border: 1px solid #f0e2ce;
+        }
+        .affiliate-section h4 {
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+        .affiliate-section ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem 1.5rem;
+            margin-top: 0.4rem;
+        }
+        .affiliate-section li a {
+            text-decoration: none;
+            background: white;
+            padding: 0.2rem 1rem 0.2rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid #e2d5c0;
+            font-size: 0.85rem;
+            color: #1e3a5f;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .affiliate-section li a:hover {
+            background: #fefcf8;
+            border-color: #b2956a;
+        }
+        .privacy-note {
+            margin-top: 1.8rem;
+            font-size: 0.75rem;
+            color: #5b6f87;
+            background: #f0f4fa;
+            padding: 0.6rem 1rem;
+            border-radius: 40px;
+            display: inline-block;
+        }
+        .footer-meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1100px;
+            margin-top: 0.2rem;
+            font-size: 0.75rem;
+            color: #5b6f87;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 1.2rem 0.8rem; }
+            h1 { font-size: 1.5rem; }
+            .btn { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+        }
+        .badge-example {
+            background: #e2eaf1;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: #1e3a5f;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>
+            🧹 Amazon 卖家 CSV 清洗
+            <small>库存 · 订单 · 格式化</small>
+        </h1>
+        <div class="subhead">
+            ⚡ 粘贴混乱的 Amazon CSV 数据 → 一键去除多余空格、空行、统一分隔符 (逗号/制表符自适应)
+        </div>
+    </header>
+
+    <section class="tool-grid">
+        <!-- 输入区 -->
+        <div class="input-area">
+            <div class="flex-row">
+                <div class="field-group">
+                    <label for="csvInput">📋 粘贴原始 CSV 数据</label>
+                    <textarea id="csvInput" placeholder="例如: SKU,  ASIN,  Price,  Qty &#10; ABC-01, B08N5X,  $25.99 ,  10 &#10; XYZ-02, B07P8L,  $14.50 ,  5 &#10; &#10; (空行和多余空格将被清理)"></textarea>
+                </div>
+            </div>
+            <div class="action-group">
+                <button class="btn" id="cleanBtn">✨ 清洗数据</button>
+                <button class="btn btn-outline" id="sampleBtn">📄 载入示例</button>
+                <button class="btn btn-outline btn-warning" id="clearBtn">🗑️ 清空</button>
+                <span class="stats-badge" id="rowStats">行数 0</span>
+            </div>
+        </div>
+
+        <!-- 输出区 -->
+        <div class="output-area">
+            <div class="output-header">
+                <h3>✅ 清洗后输出</h3>
+                <button class="copy-btn" id="copyBtn">📋 复制</button>
+            </div>
+            <div class="output-display" id="outputDisplay" role="log" aria-live="polite">清洗后的 CSV 将显示在这里……</div>
+        </div>
+    </section>
+
+    <!-- 广告占位 (可见) -->
+    <div class="placeholder-ad">
+        <span>📢 赞助位 · Amazon 卖家工具推荐</span>
+        <span style="font-weight: 400;">🛒 <a href="#" style="text-decoration:none;color:#1e3a5f;" onclick="reportEvent('ad_click',{ad:'placeholder'});return false;">SellerSprite 选品分析</a> (示例)</span>
+    </div>
+
+    <!-- 资源/联盟占位 -->
+    <section class="affiliate-section">
+        <h4>📌 推荐资源 (Amazon 卖家必备)</h4>
+        <ul>
+            <li><a href="#" onclick="reportEvent('aff_click',{resource:'junglescout'});return false;">📊 Jungle Scout 选品</a></li>
+            <li><a href="#" onclick="reportEvent('aff_click',{resource:'helium10'});return false;">🔍 Helium 10 关键词</a></li>
+            <li><a href="#" onclick="reportEvent('aff_click',{resource:'amzscout'});return false;">📦 AMZScout 库存分析</a></li>
+        </ul>
+        <div style="font-size:0.7rem; color:#7b8da0; margin-top:0.4rem;">* 以上为示例联盟链接，点击将触发匿名事件</div>
+    </section>
+
+    <!-- 隐私说明 -->
+    <div class="privacy-note">
+        🔒 隐私说明：本工具不收集任何凭证或个人信息。匿名事件计数仅用于产品改进 (如点击、清洗次数)。
+    </div>
+</div>
+
+<div class="footer-meta">
+    <span>Amazon 卖家 CSV 清洗工具 · 非官方</span>
+    <span>v1.0 · 纯前端 · 数据不上传</span>
+</div>
+
+<script>
+    (function() {
+        // ---------- 工具函数 ----------
+        const csvInput = document.getElementById('csvInput');
+        const outputDisplay = document.getElementById('outputDisplay');
+        const rowStats = document.getElementById('rowStats');
+        const cleanBtn = document.getElementById('cleanBtn');
+        const sampleBtn = document.getElementById('sampleBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // 清洗核心：去除空行、修剪每格、统一分隔符(逗号/制表符)
+        function cleanCSV(raw) {
+            if (!raw || raw.trim() === '') {
+                return { cleaned: '', rows: 0 };
+            }
+            // 1. 按行分割，保留所有行用于统计
+            let lines = raw.split(/\r?\n/);
+            // 2. 去除每行首尾空白，过滤掉完全空行 (但保留可能只有空格的行？清洗掉)
+            const nonEmptyLines = lines.map(line => line.trim()).filter(line => line.length > 0);
+            if (nonEmptyLines.length === 0) {
+                return { cleaned: '', rows: 0 };
+            }
+            // 3. 检测分隔符: 优先制表符(\t) 如果每行都有制表符；否则使用逗号。简单检测第一行
+            const firstLine = nonEmptyLines[0];
+            const tabCount = (firstLine.match(/\t/g) || []).length;
+            const commaCount = (firstLine.match(/,/g) || []).length;
+            // 如果制表符数量 >= 逗号数量且制表符>0，则用制表符分割，否则逗号
+            let delimiter = ',';
+            if (tabCount > 0 && tabCount >= commaCount) {
+                delimiter = '\t';
+            } else if (commaCount === 0 && tabCount === 0) {
+                // 没有分隔符，保持原样单列
+                delimiter = ',';
+            } else {
+                delimiter = ','; 
+            }
+
+            // 4. 清洗每一行: 按分隔符拆分，trim每个字段，再用逗号重新连接 (统一输出逗号分隔)
+            const cleanedLines = nonEmptyLines.map(line => {
+                // 如果自定义分隔符是制表符，按制表符拆分
+                let fields;
+                if (delimiter === '\t') {
+                    fields = line.split('\t');
+                } else {
+                    // 逗号分割，但注意引号内逗号？简单工具不做深度解析，但可以处理基本引号包裹
+                    // 简易: 按逗号分割，但忽略引号内的逗号？为了保持简单，我们使用正则匹配基本CSV。
+                    // 但为了不破坏卖家常用格式，我们使用更稳健的方法：使用标准CSV行解析？但纯前端避免复杂。
+                    // 采用简易：按逗号分割，并移除多余空格。对于带引号的字段，保留引号但trim。
+                    // 更合理：使用正则匹配字段 (支持引号)
+                    fields = parseCSVLine(line);
+                }
+                // 修剪每个字段首尾空格，并去除多余引号？保留引号但去除首尾空格
+                const trimmed = fields.map(f => {
+                    let val = f.trim();
+                    // 如果字段被双引号包围，移除首尾双引号（但保留内部引号？常见清洗）
+                    if (val.startsWith('"') && val.endsWith('"') && val.length >= 2) {
+                        val = val.slice(1, -1).trim();
+                    }
+                    return val;
+                });
+                // 重新用逗号连接
+                return trimmed.join(',');
+            });
+
+            // 5. 过滤掉清洗后变成空字符串的行（例如全是空字段？但保留）
+            const finalLines = cleanedLines.filter(line => line.replace(/,/g, '').trim() !== '');
+            if (finalLines.length === 0) {
+                return { cleaned: '', rows: 0 };
+            }
+            return { cleaned: finalLines.join('\n'), rows: finalLines.length };
+        }
+
+        // 简易 CSV 行解析 (支持双引号内逗号)
+        function parseCSVLine(line) {
+            const fields = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                    // 简单处理转义双引号 "" 
+                    if (inQuotes && i+1 < line.length && line[i+1] === '"') {
+                        current += '"';
+                        i++; // 跳过下一个
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (ch === ',' && !inQuotes) {
+                    fields.push(current);
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+            fields.push(current); // 最后一个字段
+            return fields;
+        }
+
+        // 更新统计
+        function updateStats(cleanedText) {
+            if (!cleanedText || cleanedText.trim() === '') {
+                rowStats.textContent = '行数 0';
+                return;
+            }
+            const lines = cleanedText.split(/\r?\n/).filter(l => l.trim() !== '');
+            rowStats.textContent = `行数 ${lines.length}`;
+        }
+
+        // 执行清洗并更新UI
+        function performClean() {
+            const raw = csvInput.value;
+            const result = cleanCSV(raw);
+            if (result.rows === 0) {
+                outputDisplay.textContent = '⚠️ 没有有效数据，请粘贴 CSV 或点击“载入示例”。';
+                rowStats.textContent = '行数 0';
+                reportEvent('clean', { status: 'empty' });
+                return;
+            }
+            outputDisplay.textContent = result.cleaned;
+            updateStats(result.cleaned);
+            reportEvent('clean', { rows: result.rows });
+        }
+
+        // 载入示例
+        function loadSample() {
+            const sample = `SKU,  ASIN,  Title,  Price,  Qty
+ABC-01, B08N5XK2J, "Amazon Basics 鼠标",  $25.99 ,  10
+XYZ-02, B07P8L9M3, "USB-C 充电线 6ft",  $14.50 ,  5
+LMN-03, B09H6F7G8, " 无线键盘 ",  $39.99 ,  2
+（空行下一行）
+
+DEF-04, B08M3N2P1, " 屏幕保护膜 2片",  $9.99 ,  20`;
+            csvInput.value = sample;
+            performClean();
+            reportEvent('load_sample', {});
+        }
+
+        // 清空
+        function clearAll() {
+            csvInput.value = '';
+            outputDisplay.textContent = '清洗后的 CSV 将显示在这里……';
+            rowStats.textContent = '行数 0';
+            reportEvent('clear', {});
+        }
+
+        // 复制
+        function copyOutput() {
+            const text = outputDisplay.textContent;
+            if (!text || text === '清洗后的 CSV 将显示在这里……' || text.startsWith('⚠️')) {
+                alert('没有可复制的内容。');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ 已复制清洗后的 CSV 到剪贴板');
+                reportEvent('copy', {});
+            }).catch(() => {
+                // fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ 已复制 (备用方式)');
+                reportEvent('copy_fallback', {});
+            });
+        }
+
+        // ---------- 事件上报 ----------
+        window.reportEvent = function(name, payload) {
+            const endpoint = window.ORGANISM_METRICS_ENDPOINT;
+            if (!endpoint) return;
+            try {
+                const body = JSON.stringify({ event: name, payload: payload || {}, timestamp: Date.now() });
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body,
+                    mode: 'cors', // 可选
+                }).catch(() => {}); // 静默失败
+            } catch (e) {}
+        };
+
+        // 暴露全局以便占位ad调用
+        // 绑定事件
+        cleanBtn.addEventListener('click', performClean);
+        sampleBtn.addEventListener('click', loadSample);
+        clearBtn.addEventListener('click', clearAll);
+        copyBtn.addEventListener('click', copyOutput);
+
+        // 初始化: 如果textarea为空, 可自动载入示例? 为了演示友好, 自动载入示例
+        if (!csvInput.value.trim()) {
+            loadSample();
+        } else {
+            // 如果已有内容, 清洗一下
+            performClean();
+        }
+
+        // 额外: 输入框支持 Ctrl+Enter 清洗
+        csvInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                performClean();
+            }
+        });
+
+        // 隐私声明: 已经展示
+        console.log('Amazon CSV 清洗工具已启动 (匿名事件上报就绪)');
+    })();
+</script>
+
+<!-- 配置指标端点 (默认不配置, 隐私安全) -->
+<script>
+    // 如果部署方需要收集匿名事件，请设置 window.ORGANISM_METRICS_ENDPOINT
+    // 例如: window.ORGANISM_METRICS_ENDPOINT = "https://your-metrics.example.com/collect";
+    // 默认不设置，不上报任何数据。
+    // 本工具不含任何隐藏跟踪。
+</script>
+</body>
+</html>
